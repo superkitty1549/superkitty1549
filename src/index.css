@@ -1,0 +1,30 @@
+@import url('https://fonts.googleapis.com/css2?family=Lekton:ital,wght@0,400;0,700;1,400&display=swap');
+
+body {
+    background-color: #dbdbbc;
+    margin: 0;
+    word-wrap: break-word;
+}
+
+p {
+  font-family: "Lekton", monospace;
+  font-weight: 400;
+  font-style: normal;
+  text-align: center;
+}
+
+#header {
+    color: #07374f;
+    font-size: 30px;
+    text-align: center;
+    font-weight: 700;
+    position: relative;
+    top: 15px;
+}
+
+#intro {
+    color: #07374f;
+    font-size: 20px;
+    text-align: center;
+    font-weight: 400;
+}
