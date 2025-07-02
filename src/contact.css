@@ -1,0 +1,21 @@
+ul#contactinfo {
+    list-style: none;
+    text-align: center;
+    font-size: 30px;
+    padding-left: 40px;
+    padding-right: 40px;
+}
+
+
+a, a:visited, a:hover, a:focus, a:active {
+    text-decoration: none;
+    color: #dbdbbc;
+}
+
+img {
+    height: 20px;
+}
+
+p#address {
+    font-size: 30px;
+}
