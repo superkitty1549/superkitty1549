@@ -1,0 +1,39 @@
+@import url('https://fonts.googleapis.com/css2?family=Iceland&display=swap');
+nav > ul {
+
+    background-color: #ad2a2a;
+    height: 60px;
+
+    list-style-type: none;
+    overflow: hidden;
+    margin: 0;
+    padding: 0;
+
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: center;
+
+    position: fixed;
+    top: 0;
+    width: 100%;
+
+}
+
+nav {
+    margin-bottom: 5%;
+}
+
+nav a {
+    font-family: 'Iceland', sans-serif;
+    color: black;
+    text-align: center;
+    font-size: 30px;
+    text-decoration: none;
+    padding: 15px 30px 15px 30px;
+    color: #dbdbbc
+}
+
+a:hover:not(.active).navi, .active.navi {
+    background-color: #731414;
+}
