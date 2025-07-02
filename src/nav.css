@@ -1,7 +1,7 @@
 @import url('https://fonts.googleapis.com/css2?family=Iceland&display=swap');
 nav > ul {
 
-    background-color: #d2e7d6;
+    background-color: #b1cab5;
     height: 60px;
 
     list-style-type: none;
@@ -31,9 +31,9 @@ nav a {
     font-size: 30px;
     text-decoration: none;
     padding: 15px 30px 15px 30px;
-    color: #dbdbbc
+    color: #c2daf5;
 }
 
 a:hover:not(.active).navi, .active.navi {
-    background-color: #731414;
+    background-color: #d2e7d6;
 }
