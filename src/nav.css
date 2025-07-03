@@ -31,7 +31,10 @@ nav a {
   font-style: normal;
   font-variation-settings:
     "wdth" 100;
-    color: #c2daf5;
+  font-size: 30px;
+  text-decoration: none;
+  padding: 15px 30px 15px 30px;
+  color: #c2daf5;
 }
 
 a:hover:not(.active).navi, .active.navi {
