@@ -26,12 +26,10 @@ nav {
 
 nav a {
   font-family: "Sour Gummy", sans-serif;
-  font-optical-sizing: auto;
+  font-size: 30px;
   font-weight: <weight>;
   font-style: normal;
-  font-variation-settings:
-    "wdth" 100;
-  font-size: 30px;
+  text-align: center;
   text-decoration: none;
   padding: 15px 30px 15px 30px;
   color: #c2daf5;
