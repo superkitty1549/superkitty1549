@@ -1,5 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Lekton:ital,wght@0,400;0,700;1,400&display=swap');
-
+@import url('https://fonts.googleapis.com/css2?family=Delius+Swash+Caps&display=swap');
 body {
     background-color: #c2daf5;
     margin: 0;
@@ -7,10 +6,9 @@ body {
 }
 
 p {
-  font-family: "Lekton", monospace;
+  font-family: "Delius Swash Caps", cursive;
   font-weight: 400;
   font-style: normal;
-  text-align: center;
 }
 
 #header {

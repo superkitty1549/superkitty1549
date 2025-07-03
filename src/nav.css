@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Iceland&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Sour+Gummy:ital,wght@0,100..900;1,100..900&display=swap');
 nav > ul {
 
     background-color: #b1cab5;
@@ -25,12 +25,12 @@ nav {
 }
 
 nav a {
-    font-family: 'Iceland', sans-serif;
-    color: black;
-    text-align: center;
-    font-size: 30px;
-    text-decoration: none;
-    padding: 15px 30px 15px 30px;
+  font-family: "Sour Gummy", sans-serif;
+  font-optical-sizing: auto;
+  font-weight: <weight>;
+  font-style: normal;
+  font-variation-settings:
+    "wdth" 100;
     color: #c2daf5;
 }
 
