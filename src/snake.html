@@ -1,57 +1,67 @@
-<!DOCTYPE html>
+<!doctype html>
 <html>
-<head>
+    <head>
+        <title>Kits 4 Kids | Snake</title>
 
-  <title>Kits 4 Kids | Snake</title>
+        <link rel="stylesheet" href="nav.css" />
+        <link rel="stylesheet" href="index.css" />
 
-  <link rel="stylesheet" href="nav.css">
-  <link rel="stylesheet" href="index.css">
+        <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
+        <style>
+            body {
+                margin: 0;
+                background: #c2daf5;
+            }
+            #dosbox {
+                width: 80vw;
+                height: 60vh;
+            }
+        </style>
+    </head>
+    <body>
+        <nav>
+            <ul>
+                <a class="navi" href="../index.html">Home</a>
+                <a class="navi" href="about.html">About</a>
+                <a class="navi" href="history.html">History</a>
+                <a class="navi" href="contact.html">Contact</a>
+                <a class="navi active" href="snake.html">Snake</a>
+            </ul>
+        </nav>
 
+        <p id="header">snake</p>
+        <p id="intro" style="padding: 0px 25px 0px 25px">
+            here's a snake game made in assembly.
+        </p>
 
-  <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
-  <style>
-    body { margin: 0; background: #c2daf5; }
-    #dosbox { width: 80vw; height: 60vh; }
-  </style>
-</head>
-<body>
-
-  <nav>
-    <ul>
-      <a class="navi" href="../index.html">Home</a>
-      <a class="navi" href="about.html">About</a>
-      <a class="navi" href="history.html">History</a>
-      <a class="navi" href="contact.html">Contact</a>
-      <a class="navi active" href="snake.html">Snake</a>
-    </ul>
-  </nav>
-
-  <p id="header">snake</p>
-  <p id="intro" style="padding: 0px 25px 0px 25px">here's a snake game made in assembly.</p>
-
-  <div id="dosbox"></div>
-  <script>
-    window.onload = () => {
-      Dos(document.getElementById("dosbox"), {
-        wdosboxUrl: "https://js-dos.com/6.22/current/wdosbox.js",
-        cycles: "max",
-        onrun: async (ci) => {
-          console.log("[INFO] Fetching snake.zip...");
-          try {
-            const response = await fetch("snake.zip");
-            if (!response.ok) throw new Error(`HTTP error! status: ${response.status}`);
-            const buffer = await response.arrayBuffer();
-            console.log("[INFO] Extracting zip...");
-            await ci.fs.extract(buffer);
-            console.log("[INFO] Running snake.exe...");
-            ci.run("snake.exe");
-          } catch (e) {
-            console.error("[ERROR] Extract failed:", e);
-          }
-        },
-      });
-    };
-  </script>
-
-</body>
+        <div id="dosbox"></div>
+        <script>
+            window.onload = () => {
+                Dos(document.getElementById('dosbox'), {
+                    wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js',
+                    cycles: 'max',
+                    onrun: async (ci) => {
+                        console.log('[INFO] Fetching snake.zip...')
+                        try {
+                            const response = await fetch('snake.zip')
+                            if (!response.ok)
+                                throw new Error(
+                                    `HTTP error! status: ${response.status}`
+                                )
+                            const arrayBuffer = await response.arrayBuffer()
+                            console.log('[INFO] Extracting zip...')
+                            await ci.fs.extract(
+                                'snake.zip',
+                                new Uint8Array(arrayBuffer)
+                            )
+                            console.log('[INFO] Running snake.exe...')
+                            ci.run('snake.exe')
+                        } catch (e) {
+                            console.error('[ERROR] Extract failed:', e)
+                        }
+                    },
+                })
+            }
+        </script>
+    </body>
 </html>
