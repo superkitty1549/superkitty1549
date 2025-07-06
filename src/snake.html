@@ -30,9 +30,33 @@
             </ul>
         </nav>
 
-        <p id="header">snake</p>
+        <p id="header">Snake Games</p>
         <p id="intro" style="padding: 0px 25px 0px 25px">
-            here's a snake game made in assembly.
+            Choose your snake game version:
+        </p>
+
+        <div style="text-align: center; margin: 20px">
+            <a
+                href="snake-web.html"
+                style="
+                    display: inline-block;
+                    background-color: #b1cab5;
+                    color: #07374f;
+                    padding: 15px 30px;
+                    text-decoration: none;
+                    border-radius: 8px;
+                    font-size: 18px;
+                    font-family: 'Sour Gummy', sans-serif;
+                    border: 2px solid #07374f;
+                    margin: 10px;
+                "
+            >
+                Play Web Version
+            </a>
+        </div>
+
+        <p id="intro" style="padding: 0px 25px 0px 25px; font-size: 16px">
+            Assembly version (DOS emulation):
         </p>
 
         <div id="dosbox"></div>
@@ -41,17 +65,22 @@
                 wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js',
             }).ready(async (fs, main) => {
                 try {
-                    const response = await fetch('https://superkitty1549.github.io/superkitty1549/src/snake.zip');
-                    if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
-                    const arrayBuffer = await response.arrayBuffer();
-                    await fs.extract(new Uint8Array(arrayBuffer));
-                    main(['-c', 'snake.exe']);
+                    const response = await fetch('./snake.zip')
+                    if (!response.ok)
+                        throw new Error(`Fetch failed: ${response.status}`)
+                    const arrayBuffer = await response.arrayBuffer()
+                    await fs.extract(new Uint8Array(arrayBuffer))
+                    main(['-c', 'snake.exe']).catch((e) => {
+                        console.error('Failed to run snake.exe:', e)
+                        document.getElementById('dosbox').innerHTML =
+                            '<p style="color: #07374f; text-align: center; font-size: 16px; padding: 20px; background-color: rgba(177, 202, 181, 0.3); border-radius: 8px; margin: 20px;">Assembly snake game requires a compiled executable. Currently showing a basic DOS program. For the full game experience, <a href="snake-web.html" style="color: #07374f; text-decoration: underline;">try the web version</a>.</p>'
+                    })
                 } catch (e) {
-                    alert(`Failed to start game: ${e.message}`);
-                    console.error(e);
+                    console.error('Failed to load snake game:', e)
+                    document.getElementById('dosbox').innerHTML =
+                        '<p style="color: #07374f; text-align: center; font-size: 16px; padding: 20px; background-color: rgba(177, 202, 181, 0.3); border-radius: 8px; margin: 20px;">Assembly version unavailable. <a href="snake-web.html" style="color: #07374f; text-decoration: underline;">Play the web version instead</a>.</p>'
                 }
-            });
+            })
         </script>
-
     </body>
 </html>
