@@ -42,7 +42,7 @@
             }).ready(async (fs, main) => {
                 const response = await fetch('./snake.zip')
                 const arrayBuffer = await response.arrayBuffer()
-                await fs.extract(new Uint8Array(arrayBuffer), '/')
+                await fs.extract(new Uint8Array(arrayBuffer))
                 main(['-c', 'snake.exe'])
             })
         </script>
