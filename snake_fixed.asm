@@ -1,12 +1,9 @@
-; Fixed Snake Game in x86 Assembly
-; Corrected boundary calculations, data structures, and logic
-
-left equ 1
-top equ 3
+left equ 0
+top equ 2
 row equ 15
 col equ 40
-right equ left+col-1
-bottom equ top+row-1
+right equ left+col
+bottom equ top+row
 
 .model small
 
@@ -16,78 +13,56 @@ _DATA segment
     quitmsg db "Thanks for playing! hope you enjoyed",0
     gameovermsg db "OOPS!! your snake died! :P ", 0
     scoremsg db "Score: ",0
-
-    ; Snake data structure: each segment has direction/char + x + y (3 bytes each)
-    head_char db '^'
-    head_x db 20
-    head_y db 10
-
-    ; Body segments: character + x + y for each segment (3 bytes each)
-    body db 45 DUP(0)  ; 15 segments max * 3 bytes each
+    head db '^',10,10
+    body db '*',10,11, 3*15 DUP(0)
     segmentcount db 1
-
-    fruitactive db 0
-    fruit_x db 8
-    fruit_y db 8
-
+    fruitactive db 1
+    fruitx db 8
+    fruity db 8
     gameover db 0
     quit db 0
-    delaytime db 8
-
-    ; Direction storage for movement
-    direction db '^'  ; current direction
+    delaytime db 5
 _DATA ends
 
-.stack 200h
+.stack 100h
 
 _CODE segment
 main proc far
-    mov ax, _DATA
-    mov ds, ax
+	mov ax, _DATA
+	mov ds, ax
 
-    mov ax, 0b800H
-    mov es, ax
+	mov ax, 0b800H
+	mov es, ax
 
-    ; Clear screen
-    mov ax, 0003H
-    int 10H
+	mov ax, 0003H
+	int 10H
 
-    ; Display welcome message
-    lea bx, msg
-    mov dx, 0000h
-    call writestringat
+	lea bx, msg
+	mov dx,00
+	call writestringat
 
-    ; Display instructions
-    lea dx, instructions
-    mov ah, 09H
-    int 21h
+	lea dx, instructions
+	mov ah, 09H
+	int 21h
 
-    ; Wait for key press
-    mov ah, 07h
-    int 21h
-
-    ; Clear screen and start game
-    mov ax, 0003H
-    int 10H
+	mov ah, 07h
+	int 21h
+	mov ax, 0003H
+	int 10H
     call printbox
-
-    ; Initialize snake position
-    mov head_x, 20
-    mov head_y, 10
-    mov direction, '^'
-    mov head_char, '^'
 
 mainloop:
     call delay
+    lea bx, msg
+    mov dx, 00
+    call writestringat
     call shiftsnake
-
-    cmp gameover, 1
+    cmp gameover,1
     je gameover_mainloop
 
     call keyboardfunctions
     cmp quit, 1
     je quitpressed_mainloop
-
     call fruitgeneration
     call draw
 
@@ -95,8 +70,8 @@ mainloop:
 
 gameover_mainloop:
     mov ax, 0003H
-    int 10H
-    mov delaytime, 50
+	int 10H
+    mov delaytime, 100
     mov dx, 0000H
     lea bx, gameovermsg
     call writestringat
@@ -105,8 +80,8 @@ gameover_mainloop:
 
 quitpressed_mainloop:
     mov ax, 0003H
-    int 10H
-    mov delaytime, 50
+	int 10H
+    mov delaytime, 100
     mov dx, 0000H
     lea bx, quitmsg
     call writestringat
@@ -114,13 +89,11 @@ quitpressed_mainloop:
     jmp quit_mainloop
 
 quit_mainloop:
-    ; Clear screen
-    mov ax, 0003H
-    int 10h
-    mov ax, 4c00h
-    int 21h
-
-main endp
+; first clear screen
+mov ax, 0003H
+int 10h
+mov ax, 4c00h
+int 21h
 
 delay proc
     mov ah, 00
@@ -135,40 +108,60 @@ jmp_delay:
 delay endp
 
 fruitgeneration proc
+    mov ch, fruity
+    mov cl, fruitx
+regenerate:
     cmp fruitactive, 1
     je ret_fruitactive
-
-regenerate:
-    ; Generate random X coordinate
     mov ah, 00
     int 1Ah
+    push dx
     mov ax, dx
     xor dx, dx
-    mov bx, col-2
+    xor bh, bh
+    mov bl, row
+    dec bl
+    ; Add bounds check to prevent division by zero
+    cmp bl, 0
+    je regenerate
     div bx
-    mov fruit_x, dl
-    add fruit_x, left+1
-
-    ; Generate random Y coordinate
-    mov ah, 00
-    int 1Ah
-    add dx, 12345  ; Add offset for different random
-    mov ax, dx
+    mov fruity, dl
+    inc fruity
+    pop ax
+    mov bl, col
+    dec bl        ; Fixed: was dec dl, should be dec bl
+    xor bh, bh
+    ; Add bounds check to prevent division by zero
+    cmp bl, 0
+    je regenerate
     xor dx, dx
-    mov bx, row-2
     div bx
-    mov fruit_y, dl
-    add fruit_y, top+1
-
-    ; Check if fruit position conflicts with snake
-    mov dh, fruit_y
-    mov dl, fruit_x
+    mov fruitx, dl
+    inc fruitx
+    cmp fruitx, cl
+    jne nevermind
+    cmp fruity, ch
+    jne nevermind
+    jmp regenerate
+nevermind:
+    mov al, fruitx
+    ror al,1
+    jc regenerate
+    add fruity, top
+    add fruitx, left
+    mov dh, fruity
+    mov dl, fruitx
     call readcharat
-    cmp bl, ' '
-    jne regenerate  ; If not empty space, regenerate
-
-    mov fruitactive, 1
-
+    cmp bl, '*'
+    je regenerate
+    cmp bl, '^'
+    je regenerate
+    cmp bl, '<'
+    je regenerate
+    cmp bl, '>'
+    je regenerate
+    cmp bl, 'v'
+    je regenerate
 ret_fruitactive:
     ret
 fruitgeneration endp
@@ -181,10 +174,10 @@ dispdigit proc
 dispdigit endp
 
 dispnum proc
-    test ax, ax
+    test ax,ax
     jz retz
     xor dx, dx
-    mov bx, 10
+    mov bx,10
     div bx
     push dx
     call dispnum
@@ -192,67 +185,46 @@ dispnum proc
     call dispdigit
     ret
 retz:
+    ; Fixed: properly display zero
+    mov dl, '0'
+    call dispdigit
     ret
 dispnum endp
 
 setcursorpos proc
     mov ah, 02H
     push bx
-    mov bh, 0
+    mov bh,0
     int 10h
     pop bx
     ret
 setcursorpos endp
 
 draw proc
-    ; Display score
     lea bx, scoremsg
-    mov dx, 0109h
+    mov dx, 0109
     call writestringat
-    mov dx, 0109h + 7
+    add dx, 7
     call setcursorpos
     mov al, segmentcount
     dec al
     xor ah, ah
     call dispnum
-
-    ; Draw snake head
-    mov bl, head_char
-    mov dh, head_y
-    mov dl, head_x
-    call writecharat
-
-    ; Draw snake body
-    lea si, body
-    mov cx, 0
-    mov cl, segmentcount
-    dec cx  ; Don't count head
-
-draw_body_loop:
-    test cx, cx
-    jz draw_fruit
-
-    mov bl, ds:[si]     ; Get body character
+    lea si, head
+draw_loop:
+    mov bl, ds:[si]
     test bl, bl
-    jz draw_fruit
-
-    mov dh, ds:[si+2]   ; Get Y coordinate
-    mov dl, ds:[si+1]   ; Get X coordinate
+    jz out_draw
+    mov dx, ds:[si+1]
     call writecharat
-
-    add si, 3           ; Move to next segment
-    dec cx
-    jmp draw_body_loop
-
-draw_fruit:
-    cmp fruitactive, 1
-    jne draw_end
+    add si,3
+    jmp draw_loop
+out_draw:
     mov bl, 'X'
-    mov dh, fruit_y
-    mov dl, fruit_x
+    mov dh, fruity
+    mov dl, fruitx
     call writecharat
-
-draw_end:
+    mov fruitactive, 1
     ret
 draw endp
 
@@ -265,310 +237,228 @@ readchar proc
 keybdpressed:
     mov ah, 00H
     int 16H
-    mov dl, al
+    mov dl,al
     ret
 readchar endp
 
 keyboardfunctions proc
     call readchar
     cmp dl, 0
-    je no_key_pressed
-
+    je next_14
     cmp dl, 'w'
-    jne check_s
-    cmp direction, 'v'  ; Can't reverse into self
-    je no_key_pressed
-    mov direction, '^'
-    mov head_char, '^'
+    jne next_11
+    cmp head, 'v'
+    je next_14
+    mov head, '^'
     ret
-
-check_s:
+next_11:
     cmp dl, 's'
-    jne check_a
-    cmp direction, '^'  ; Can't reverse into self
-    je no_key_pressed
-    mov direction, 'v'
-    mov head_char, 'v'
+    jne next_12
+    cmp head, '^'
+    je next_14
+    mov head, 'v'
     ret
-
-check_a:
+next_12:
     cmp dl, 'a'
-    jne check_d
-    cmp direction, '>'  ; Can't reverse into self
-    je no_key_pressed
-    mov direction, '<'
-    mov head_char, '<'
+    jne next_13
+    cmp head, '>'
+    je next_14
+    mov head, '<'
     ret
-
-check_d:
+next_13:
     cmp dl, 'd'
-    jne check_q
-    cmp direction, '<'  ; Can't reverse into self
-    je no_key_pressed
-    mov direction, '>'
-    mov head_char, '>'
-    ret
-
-check_q:
+    jne next_14
+    cmp head, '<'
+    je next_14
+    mov head,'>'
+next_14:
     cmp dl, 'q'
-    jne no_key_pressed
-    mov quit, 1
-
-no_key_pressed:
+    je quit_keyboardfunctions
+    ret
+quit_keyboardfunctions:
+    inc quit
     ret
 keyboardfunctions endp
 
 shiftsnake proc
-    ; First, shift body segments backward
-    call shift_body_segments
-
-    ; Store current head position as first body segment if we have body
-    cmp segmentcount, 1
-    je move_head_only
-
-    ; Move current head to first body position
-    lea si, body
-    mov bl, '*'
-    mov ds:[si], bl      ; Body character
-    mov bl, head_x
-    mov ds:[si+1], bl    ; X coordinate
-    mov bl, head_y
-    mov ds:[si+2], bl    ; Y coordinate
-
-move_head_only:
-    ; Calculate new head position based on direction
-    mov al, direction
-    mov bl, head_x
-    mov bh, head_y
-
+    mov bx, offset head
+    xor ax, ax
+    mov al, [bx]
+    push ax
+    inc bx
+    mov ax, [bx]
+    inc bx
+    inc bx
+    xor cx, cx
+l:
+    mov si, [bx]
+    test si, si      ; Fixed: was test si, [bx], should be test si, si
+    jz outside
+    inc cx
+    inc bx
+    mov dx,[bx]
+    mov [bx], ax
+    mov ax,dx
+    inc bx
+    inc bx
+    jmp l
+outside:
+    pop ax           ; Restore the head character
+    push dx          ; Save the tail position
+    lea bx, head
+    inc bx
+    mov dx, [bx]
     cmp al, '<'
-    jne check_right
-    dec bl
-    jmp update_head_pos
-
-check_right:
+    jne next_1
+    dec dl
+    jmp done_checking_the_head
+next_1:
     cmp al, '>'
-    jne check_up
-    inc bl
-    jmp update_head_pos
-
-check_up:
+    jne next_2
+    inc dl
+    jmp done_checking_the_head
+next_2:
     cmp al, '^'
-    jne check_down
-    dec bh
-    jmp update_head_pos
-
-check_down:
-    inc bh
-
-update_head_pos:
-    ; Check boundaries
-    cmp bl, left
-    jle game_over
-    cmp bl, right
-    jge game_over
-    cmp bh, top
-    jle game_over
-    cmp bh, bottom
-    jge game_over
-
-    ; Update head position
-    mov head_x, bl
-    mov head_y, bh
-
-    ; Check what's at new position
-    mov dh, bh
-    mov dl, bl
+    jne next_3
+    dec dh
+    jmp done_checking_the_head
+next_3:
+    inc dh
+done_checking_the_head:
+    mov [bx],dx
     call readcharat
-
     cmp bl, 'X'
-    je ate_fruit
-
+    je i_ate_fruit
+    mov cx, dx
+    pop dx           ; Restore tail position
     cmp bl, '*'
     je game_over
-
+    mov bl, 0
+    call writecharat
+    mov dx, cx
+    ; Fixed: improved boundary checking
+    cmp dh, top
+    jle game_over
+    cmp dh, bottom
+    jge game_over
+    cmp dl, left
+    jle game_over
+    cmp dl, right
+    jge game_over
     ret
-
 game_over:
-    mov gameover, 1
+    inc gameover
     ret
-
-ate_fruit:
-    ; Increase snake length
+i_ate_fruit:
+    mov al, segmentcount
+    xor ah, ah
+    lea bx, body
+    mov cx, 3
+    mul cx
+    pop dx           ; Get the tail position
+    add bx, ax
+    mov byte ptr ds:[bx], '*'
+    mov [bx+1], dx
     inc segmentcount
-
-    ; Clear fruit
-    mov dh, fruit_y
-    mov dl, fruit_x
-    mov bl, ' '
+    mov dh, fruity
+    mov dl, fruitx
+    mov bl, 0
     call writecharat
     mov fruitactive, 0
-
-    ; Reduce delay to increase speed
-    cmp delaytime, 3
-    jle no_speed_increase
-    dec delaytime
-
-no_speed_increase:
     ret
 shiftsnake endp
 
-shift_body_segments proc
-    ; Shift all body segments one position back
-    mov cl, segmentcount
-    dec cl              ; Don't count head
-    cmp cl, 1
-    jle no_shift_needed
-
-    ; Start from the end and work backwards
-    lea si, body
-    mov al, 3
-    mul cl              ; Calculate offset to last segment
-    add si, ax
-    sub si, 3           ; Point to last valid segment
-
-shift_loop:
-    cmp cl, 1
-    jle no_shift_needed
-
-    ; Copy from current-1 to current
-    mov al, ds:[si-3]   ; Character
-    mov bl, ds:[si-2]   ; X
-    mov bh, ds:[si-1]   ; Y
-
-    mov ds:[si], al     ; Store character
-    mov ds:[si+1], bl   ; Store X
-    mov ds:[si+2], bh   ; Store Y
-
-    sub si, 3
-    dec cl
-    jmp shift_loop
-
-no_shift_needed:
-    ret
-shift_body_segments endp
-
 printbox proc
-    ; Draw top border
     mov dh, top
     mov dl, left
     mov cx, col
-    mov bl, '#'
-
-top_border:
+    mov bl, '*'
+l1:
     call writecharat
     inc dl
-    loop top_border
-
-    ; Draw right border
-    mov dh, top
-    mov dl, right
+    loop l1
     mov cx, row
-
-right_border:
+l2:
     call writecharat
     inc dh
-    loop right_border
-
-    ; Draw bottom border
-    mov dh, bottom
-    mov dl, right
+    loop l2
     mov cx, col
-
-bottom_border:
+l3:
     call writecharat
     dec dl
-    loop bottom_border
-
-    ; Draw left border
-    mov dh, bottom
-    mov dl, left
+    loop l3
     mov cx, row
-
-left_border:
+l4:
     call writecharat
     dec dh
-    loop left_border
-
+    loop l4
     ret
 printbox endp
 
 writecharat proc
     push dx
-    push ax
-
-    ; Calculate video memory offset
-    mov al, dh          ; Row
-    mov ah, 160         ; 80 chars * 2 bytes per char
-    mul ah
+    mov ax, dx
+    and ax, 0FF00H
+    shr ax,8
+    push bx
+    mov bh, 160
+    mul bh
+    pop bx
+    and dx, 0FFH
+    shl dx,1
+    add ax, dx
     mov di, ax
-
-    mov al, dl          ; Column
-    mov ah, 2           ; 2 bytes per character
-    mul ah
-    add di, ax
-
-    mov es:[di], bl     ; Write character
-    mov byte ptr es:[di+1], 07h  ; White on black attribute
-
-    pop ax
+    mov es:[di], bl
     pop dx
     ret
 writecharat endp
 
 readcharat proc
     push dx
-    push ax
-
-    ; Calculate video memory offset
-    mov al, dh          ; Row
-    mov ah, 160         ; 80 chars * 2 bytes per char
-    mul ah
+    mov ax, dx
+    and ax, 0FF00H
+    shr ax,8
+    push bx
+    mov bh, 160
+    mul bh
+    pop bx
+    and dx, 0FFH
+    shl dx,1
+    add ax, dx
     mov di, ax
-
-    mov al, dl          ; Column
-    mov ah, 2           ; 2 bytes per character
-    mul ah
-    add di, ax
-
-    mov bl, es:[di]     ; Read character
-
-    pop ax
+    mov bl,es:[di]
     pop dx
     ret
 readcharat endp
 
 writestringat proc
     push dx
-    push ax
-
-    ; Calculate video memory offset
-    mov al, dh          ; Row
-    mov ah, 160         ; 80 chars * 2 bytes per char
-    mul ah
+    mov ax, dx
+    and ax, 0FF00H
+    shr ax,8
+    push bx
+    mov bh, 160
+    mul bh
+    pop bx
+    and dx, 0FFH
+    shl dx,1
+    add ax, dx
     mov di, ax
-
-    mov al, dl          ; Column
-    mov ah, 2           ; 2 bytes per character
-    mul ah
-    add di, ax
-
 loop_writestringat:
     mov al, [bx]
     test al, al
     jz exit_writestringat
     mov es:[di], al
-    mov byte ptr es:[di+1], 07h  ; White on black attribute
-    add di, 2
+    inc di
+    inc di
     inc bx
     jmp loop_writestringat
-
 exit_writestringat:
-    pop ax
     pop dx
     ret
 writestringat endp
 
+main endp
 _CODE ends
 
 end main
