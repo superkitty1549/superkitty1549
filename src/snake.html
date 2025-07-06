@@ -40,9 +40,9 @@
             Dos(document.getElementById('dosbox'), {
                 wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js',
             }).ready(async (fs, main) => {
-                const response = await fetch('snake.zip')
+                const response = await fetch('https://superkitty1549.github.io/superkitty1549/src/snake.zip')
                 const arrayBuffer = await response.arrayBuffer()
-                await fs.extract(new Uint8Array(arrayBuffer), 'snake.zip')
+                await fs.extract(new Uint8Array(arrayBuffer))
                 main(['-c', 'snake.exe'])
             })
         </script>
