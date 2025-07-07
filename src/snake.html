@@ -47,11 +47,10 @@
                     await fs.extract(new Uint8Array(arrayBuffer));
                     main(['-c', 'snake.exe']);
                 } catch (e) {
-                    alert(`Failed to start game: ${e.message}`);
-                    console.error(e);
+                    alert(`Failed to start game: ${e.message}`)
+                    console.error(e)
                 }
-            });
+            })
         </script>
-
     </body>
 </html>
