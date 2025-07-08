@@ -35,7 +35,28 @@
             here's a snake game made in assembly.
         </p>
 
-        <div id="dosbox"></div>
+
+        <pre id="output"></pre>
+
+        <script src="brainfuck.js"></script>
+        <script>
+            fetch('snake.b')
+              .then(response => response.text())
+              .then(code => {
+                const outputEl = document.getElementById('output');
+                const outputBuffer = [];
+
+                const runBrainfuck = window.runBrainfuck;
+                runBrainfuck(code, {
+                  output: char => outputBuffer.push(String.fromCharCode(char)),
+                  input: () => 0 // no input support for now
+                });
+
+                outputEl.textContent = outputBuffer.join('');
+              });
+        </script>
+
+        <!--- <div id="dosbox"></div>
         <script>
             Dos(document.getElementById('dosbox'), {
                 wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js',
@@ -51,6 +72,6 @@
                     console.error(e)
                 }
             })
-        </script>
+        </script> -->
     </body>
 </html>
