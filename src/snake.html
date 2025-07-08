@@ -34,8 +34,50 @@
             use arrow keys to move, or if ur on mobile touch the top/bottom/left/right side of the box. red is apple, blue is instakill
         </p>
 
+        <style>
+            body {
+              margin: 0;
+              background: #111;
+              display: flex;
+              justify-content: center;
+              align-items: center;
+              height: 100vh;
+            }
 
-        <p align="center"><canvas id="screen" width="512" height="512"></canvas></p>
+            #wrapper {
+              position: relative;
+              width: 512px;
+              height: 512px;
+            }
+
+            canvas {
+              width: 512px;
+              height: 512px;
+              image-rendering: pixelated;
+              background: black;
+              display: block;
+            }
+
+            .touch-button {
+              position: absolute;
+              z-index: 10;
+              touch-action: none;
+              /* Optional debug styles: */
+              /* background: rgba(255, 255, 255, 0.05); */
+            }
+
+            .touch-button.up    { top: 0; left: 20%; width: 60%; height: 20%; }
+            .touch-button.down  { bottom: 0; left: 20%; width: 60%; height: 20%; }
+            .touch-button.left  { top: 20%; left: 0; width: 20%; height: 60%; }
+            .touch-button.right { top: 20%; right: 0; width: 20%; height: 60%; }
+        </style>
+        <div id="wrapper">
+            <canvas id="screen" width="512" height="512"></canvas>
+            <div class="touch-button up"    data-dir="up"></div>
+            <div class="touch-button down"  data-dir="down"></div>
+            <div class="touch-button left"  data-dir="left"></div>
+            <div class="touch-button right" data-dir="right"></div>
+        </div>
         <script>
             const canvas = document.getElementById("screen");
             const ctx = canvas.getContext("2d");
@@ -48,13 +90,16 @@
             let program = [];
             let inputState = 0;
 
-            // Load Brainfuck program from snake.b content
             fetch("snake.b")
               .then(r => r.text())
               .then(src => {
                 program = preprocess(src);
                 runFrame();
               });
+
+            function preprocess(code) {
+              return [...code].filter(c => "><+-.,[]?".includes(c));
+            }
 
             // Keyboard input → bitmask
             window.addEventListener("keydown", (e) => {
@@ -83,14 +128,41 @@
               }
             });
 
-            function preprocess(code) {
-              // Optional compression: compress +++, <<<, etc.
-              return [...code].filter(c => "><+-.,[]?".includes(c));
-            }
+            // Touch + Mouse input
+            const dirToBit = {
+              up:    0x08,
+              down:  0x04,
+              left:  0x02,
+              right: 0x01
+            };
+
+            document.querySelectorAll(".touch-button").forEach(btn => {
+              const dir = btn.dataset.dir;
+
+              btn.addEventListener("touchstart", e => {
+                e.preventDefault();
+                inputState |= dirToBit[dir];
+              }, { passive: false });
+
+              btn.addEventListener("touchend", e => {
+                inputState &= ~dirToBit[dir];
+              });
+
+              btn.addEventListener("mousedown", e => {
+                inputState |= dirToBit[dir];
+              });
+
+              btn.addEventListener("mouseup", e => {
+                inputState &= ~dirToBit[dir];
+              });
+
+              btn.addEventListener("mouseleave", e => {
+                inputState &= ~dirToBit[dir];
+              });
+            });
 
             function runFrame() {
-              const frameStart = performance.now();
-              runUntilDot(); // Run until '.' command (one frame)
+              runUntilDot();
               drawFramebuffer();
               requestAnimationFrame(runFrame);
             }
@@ -123,7 +195,7 @@
                         if (program[pc] === "]") close++;
                         else if (program[pc] === "[") close--;
                       }
-                      pc--; // loop back into [
+                      pc--;
                     }
                     break;
                 }
@@ -143,28 +215,6 @@
                 ctx.fillRect(x * scale, y * scale, scale, scale);
               }
             }
-
-            canvas.addEventListener("touchstart", handleTouch, { passive: false });
-canvas.addEventListener("touchend", () => {
-  inputState &= ~0x0F; // Clear arrow keys (bits 0–3)
-});
-
-function handleTouch(e) {
-  e.preventDefault(); // Prevent scroll/zoom
-  const rect = canvas.getBoundingClientRect();
-  for (const touch of e.touches) {
-    const x = touch.clientX - rect.left;
-    const y = touch.clientY - rect.top;
-
-    const edgeMargin = canvas.width * 0.2; // 20% of width
-
-    if (y < edgeMargin)        inputState |= 0x08; // Up
-    else if (y > canvas.height - edgeMargin) inputState |= 0x04; // Down
-    else if (x < edgeMargin)   inputState |= 0x02; // Left
-    else if (x > canvas.width - edgeMargin) inputState |= 0x01; // Right
-  }
-}
-
         </script>
 
         <!--- <div id="dosbox"></div>
