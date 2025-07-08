@@ -30,10 +30,9 @@
             </ul>
         </nav>
 
-        <p id="header">snake</p>
-        <!-- <p id="intro" style="padding: 0px 25px 0px 25px">
-            here's a snake game made in brainfuck.
-        </p> -->
+        <p id="intro" style="padding: 0px 25px 0px 25px">
+            use arrow keys to move, or if ur on mobile touch the top/bottom/left/right side of the box. red is apple, blue is instakill
+        </p>
 
 
         <p align="center"><canvas id="screen" width="512" height="512"></canvas></p>
@@ -144,6 +143,28 @@
                 ctx.fillRect(x * scale, y * scale, scale, scale);
               }
             }
+
+            canvas.addEventListener("touchstart", handleTouch, { passive: false });
+canvas.addEventListener("touchend", () => {
+  inputState &= ~0x0F; // Clear arrow keys (bits 0–3)
+});
+
+function handleTouch(e) {
+  e.preventDefault(); // Prevent scroll/zoom
+  const rect = canvas.getBoundingClientRect();
+  for (const touch of e.touches) {
+    const x = touch.clientX - rect.left;
+    const y = touch.clientY - rect.top;
+
+    const edgeMargin = canvas.width * 0.2; // 20% of width
+
+    if (y < edgeMargin)        inputState |= 0x08; // Up
+    else if (y > canvas.height - edgeMargin) inputState |= 0x04; // Down
+    else if (x < edgeMargin)   inputState |= 0x02; // Left
+    else if (x > canvas.width - edgeMargin) inputState |= 0x01; // Right
+  }
+}
+
         </script>
 
         <!--- <div id="dosbox"></div>
