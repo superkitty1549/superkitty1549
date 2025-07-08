@@ -36,28 +36,112 @@
         </p>
 
 
-        <select id="program">
-            <option value="snake.b">snake.b</option>
-            <option value="badapple.b">badapple.b</option>
-        </select>
-        <button onclick="run()">Run</button>
-        <div id="output"></div>
-
-        <script src="brainfuck.js"></script>
+        <canvas id="screen" width="512" height="512"></canvas>
         <script>
-            async function run() {
-              const file = document.getElementById("program").value;
-              const outputDiv = document.getElementById("output");
-              outputDiv.textContent = `Loading ${file}...\n`;
+            const canvas = document.getElementById("screen");
+            const ctx = canvas.getContext("2d");
+            const scale = 32;
+            const memSize = 30000;
+            const fbSize = 256;
+            const memory = new Uint8Array(memSize);
+            let pointer = 0;
+            let pc = 0;
+            let program = [];
+            let inputState = 0;
 
-              try {
-                const res = await fetch(file);
-                const code = await res.text();
+            // Load Brainfuck program from snake.b content
+            fetch("snake.b")
+              .then(r => r.text())
+              .then(src => {
+                program = preprocess(src);
+                runFrame();
+              });
 
-                outputDiv.textContent = "";
-                runBF(code, "", c => outputDiv.textContent += c);
-              } catch (err) {
-                outputDiv.textContent += "Error: " + err.message;
+            // Keyboard input → bitmask
+            window.addEventListener("keydown", (e) => {
+              switch (e.code) {
+                case "ArrowUp":    inputState |= 0x08; break;
+                case "ArrowDown":  inputState |= 0x04; break;
+                case "ArrowLeft":  inputState |= 0x02; break;
+                case "ArrowRight": inputState |= 0x01; break;
+                case "Space":      inputState |= 0x10; break;
+                case "Enter":      inputState |= 0x20; break;
+                case "KeyX":       inputState |= 0x40; break;
+                case "KeyZ":       inputState |= 0x80; break;
+              }
+            });
+
+            window.addEventListener("keyup", (e) => {
+              switch (e.code) {
+                case "ArrowUp":    inputState &= ~0x08; break;
+                case "ArrowDown":  inputState &= ~0x04; break;
+                case "ArrowLeft":  inputState &= ~0x02; break;
+                case "ArrowRight": inputState &= ~0x01; break;
+                case "Space":      inputState &= ~0x10; break;
+                case "Enter":      inputState &= ~0x20; break;
+                case "KeyX":       inputState &= ~0x40; break;
+                case "KeyZ":       inputState &= ~0x80; break;
+              }
+            });
+
+            function preprocess(code) {
+              // Optional compression: compress +++, <<<, etc.
+              return [...code].filter(c => "><+-.,[]?".includes(c));
+            }
+
+            function runFrame() {
+              const frameStart = performance.now();
+              runUntilDot(); // Run until '.' command (one frame)
+              drawFramebuffer();
+              requestAnimationFrame(runFrame);
+            }
+
+            function runUntilDot() {
+              while (pc < program.length) {
+                const cmd = program[pc];
+                switch (cmd) {
+                  case ">": pointer++; break;
+                  case "<": pointer--; break;
+                  case "+": memory[pointer]++; break;
+                  case "-": memory[pointer]--; break;
+                  case ".": pc++; return;
+                  case ",": memory[pointer] = inputState; break;
+                  case "[":
+                    if (memory[pointer] === 0) {
+                      let open = 1;
+                      while (open > 0) {
+                        pc++;
+                        if (program[pc] === "[") open++;
+                        else if (program[pc] === "]") open--;
+                      }
+                    }
+                    break;
+                  case "]":
+                    if (memory[pointer] !== 0) {
+                      let close = 1;
+                      while (close > 0) {
+                        pc--;
+                        if (program[pc] === "]") close++;
+                        else if (program[pc] === "[") close--;
+                      }
+                      pc--; // loop back into [
+                    }
+                    break;
+                }
+                pc++;
+              }
+            }
+
+            function drawFramebuffer() {
+              for (let i = 0; i < fbSize; i++) {
+                const val = memory[i];
+                const x = i % 16;
+                const y = Math.floor(i / 16);
+                const r = ((val & 0xE0) >> 5) * 255 / 7;
+                const g = ((val & 0x1C) >> 2) * 255 / 7;
+                const b = (val & 0x03) * 255 / 3;
+                ctx.fillStyle = `rgb(${r},${g},${b})`;
+                ctx.fillRect(x * scale, y * scale, scale, scale);
               }
             }
         </script>
