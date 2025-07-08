@@ -1,238 +1,222 @@
-<!doctype html>
-<html>
-    <head>
-        <title>Kits 4 Kids | Snake</title>
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Kits 4 Kids | Snake</title>
 
-        <link rel="stylesheet" href="nav.css" />
-        <link rel="stylesheet" href="index.css" />
+    <link rel="stylesheet" href="nav.css" />
+    <link rel="stylesheet" href="index.css" />
+    <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
 
-        <script src="https://js-dos.com/6.22/current/js-dos.js"></script>
-        <style>
-            body {
-                margin: 0;
-                background: #c2daf5;
-            }
-            #dosbox {
-                width: 80vw;
-                height: 60vh;
-                margin: auto;
-            }
-        </style>
-    </head>
-    <body>
-        <nav>
-            <ul>
-                <a class="navi" href="../index.html">Home</a>
-                <a class="navi" href="about.html">About</a>
-                <a class="navi" href="events.html">History</a>
-                <a class="navi" href="contact.html">Contact</a>
-                <a class="navi active" href="snake.html">Snake</a>
-            </ul>
-        </nav>
+    <style>
+        body {
+          margin: 0;
+          background: #c2daf5;
+          font-family: sans-serif;
+        }
 
-        <p id="intro" style="padding: 0px 25px 0px 25px">
-            use arrow keys to move, or if ur on mobile touch the top/bottom/left/right side of the box. red is apple, blue is instakill
-        </p>
+        nav {
+          padding: 10px;
+        }
 
-        <style>
-            body {
-              margin: 0;
-              background: #111;
-              display: flex;
-              justify-content: center;
-              align-items: center;
-              height: 100vh;
-            }
+        #intro {
+          padding: 0 25px;
+          margin-bottom: 10px;
+        }
 
-            #wrapper {
-              position: relative;
-              width: 512px;
-              height: 512px;
-            }
+        #wrapper {
+          margin: 20px auto;
+          position: relative;
+          width: 512px;
+          height: 512px;
+          display: flex;
+          justify-content: center;
+          align-items: center;
+        }
 
-            canvas {
-              width: 512px;
-              height: 512px;
-              image-rendering: pixelated;
-              background: black;
-              display: block;
-            }
+        canvas {
+          width: 512px;
+          height: 512px;
+          image-rendering: pixelated;
+          background: black;
+          display: block;
+        }
 
-            .touch-button {
-              position: absolute;
-              z-index: 10;
-              touch-action: none;
-              /* Optional debug styles: */
-              /* background: rgba(255, 255, 255, 0.05); */
-            }
+        .touch-button {
+          position: absolute;
+          z-index: 10;
+          touch-action: none;
+          /* Optional: add debug color during development */
+          /* background: rgba(255, 255, 255, 0.1); */
+        }
 
-            .touch-button.up    { top: 0; left: 20%; width: 60%; height: 20%; }
-            .touch-button.down  { bottom: 0; left: 20%; width: 60%; height: 20%; }
-            .touch-button.left  { top: 20%; left: 0; width: 20%; height: 60%; }
-            .touch-button.right { top: 20%; right: 0; width: 20%; height: 60%; }
-        </style>
-        <div id="wrapper">
-            <canvas id="screen" width="512" height="512"></canvas>
-            <div class="touch-button up"    data-dir="up"></div>
-            <div class="touch-button down"  data-dir="down"></div>
-            <div class="touch-button left"  data-dir="left"></div>
-            <div class="touch-button right" data-dir="right"></div>
-        </div>
-        <script>
-            const canvas = document.getElementById("screen");
-            const ctx = canvas.getContext("2d");
-            const scale = 32;
-            const memSize = 30000;
-            const fbSize = 256;
-            const memory = new Uint8Array(memSize);
-            let pointer = 0;
-            let pc = 0;
-            let program = [];
-            let inputState = 0;
+        .touch-button.up    { top: 0; left: 20%; width: 60%; height: 20%; }
+        .touch-button.down  { bottom: 0; left: 20%; width: 60%; height: 20%; }
+        .touch-button.left  { top: 20%; left: 0; width: 20%; height: 60%; }
+        .touch-button.right { top: 20%; right: 0; width: 20%; height: 60%; }
+    </style>
+</head>
 
-            fetch("snake.b")
-              .then(r => r.text())
-              .then(src => {
-                program = preprocess(src);
-                runFrame();
-              });
+<body>
+<nav>
+    <ul>
+        <a class="navi" href="../index.html">Home</a>
+        <a class="navi" href="about.html">About</a>
+        <a class="navi" href="events.html">History</a>
+        <a class="navi" href="contact.html">Contact</a>
+        <a class="navi active" href="snake.html">Snake</a>
+    </ul>
+</nav>
 
-            function preprocess(code) {
-              return [...code].filter(c => "><+-.,[]?".includes(c));
-            }
+<p id="intro">
+    Use arrow keys to move, or if you're on mobile, touch the top/bottom/left/right side of the box. Red is apple, blue is instakill.
+</p>
 
-            // Keyboard input → bitmask
-            window.addEventListener("keydown", (e) => {
-              switch (e.code) {
-                case "ArrowUp":    inputState |= 0x08; break;
-                case "ArrowDown":  inputState |= 0x04; break;
-                case "ArrowLeft":  inputState |= 0x02; break;
-                case "ArrowRight": inputState |= 0x01; break;
-                case "Space":      inputState |= 0x10; break;
-                case "Enter":      inputState |= 0x20; break;
-                case "KeyX":       inputState |= 0x40; break;
-                case "KeyZ":       inputState |= 0x80; break;
-              }
-            });
+<div id="wrapper">
+    <canvas id="screen" width="512" height="512"></canvas>
+    <div class="touch-button up"    data-dir="up"></div>
+    <div class="touch-button down"  data-dir="down"></div>
+    <div class="touch-button left"  data-dir="left"></div>
+    <div class="touch-button right" data-dir="right"></div>
+</div>
 
-            window.addEventListener("keyup", (e) => {
-              switch (e.code) {
-                case "ArrowUp":    inputState &= ~0x08; break;
-                case "ArrowDown":  inputState &= ~0x04; break;
-                case "ArrowLeft":  inputState &= ~0x02; break;
-                case "ArrowRight": inputState &= ~0x01; break;
-                case "Space":      inputState &= ~0x10; break;
-                case "Enter":      inputState &= ~0x20; break;
-                case "KeyX":       inputState &= ~0x40; break;
-                case "KeyZ":       inputState &= ~0x80; break;
-              }
-            });
+<script>
+    const canvas = document.getElementById("screen");
+    const ctx = canvas.getContext("2d");
+    const scale = 32;
+    const memSize = 30000;
+    const fbSize = 256;
+    const memory = new Uint8Array(memSize);
+    let pointer = 0;
+    let pc = 0;
+    let program = [];
+    let inputState = 0;
 
-            // Touch + Mouse input
-            const dirToBit = {
-              up:    0x08,
-              down:  0x04,
-              left:  0x02,
-              right: 0x01
-            };
+    fetch("snake.b")
+      .then(r => r.text())
+      .then(src => {
+        program = preprocess(src);
+        runFrame();
+      });
 
-            document.querySelectorAll(".touch-button").forEach(btn => {
-              const dir = btn.dataset.dir;
+    function preprocess(code) {
+      return [...code].filter(c => "><+-.,[]?".includes(c));
+    }
 
-              btn.addEventListener("touchstart", e => {
-                e.preventDefault();
-                inputState |= dirToBit[dir];
-              }, { passive: false });
+    // Keyboard input → bitmask
+    window.addEventListener("keydown", (e) => {
+      switch (e.code) {
+        case "ArrowUp":    inputState |= 0x08; break;
+        case "ArrowDown":  inputState |= 0x04; break;
+        case "ArrowLeft":  inputState |= 0x02; break;
+        case "ArrowRight": inputState |= 0x01; break;
+        case "Space":      inputState |= 0x10; break;
+        case "Enter":      inputState |= 0x20; break;
+        case "KeyX":       inputState |= 0x40; break;
+        case "KeyZ":       inputState |= 0x80; break;
+      }
+    });
 
-              btn.addEventListener("touchend", e => {
-                inputState &= ~dirToBit[dir];
-              });
+    window.addEventListener("keyup", (e) => {
+      switch (e.code) {
+        case "ArrowUp":    inputState &= ~0x08; break;
+        case "ArrowDown":  inputState &= ~0x04; break;
+        case "ArrowLeft":  inputState &= ~0x02; break;
+        case "ArrowRight": inputState &= ~0x01; break;
+        case "Space":      inputState &= ~0x10; break;
+        case "Enter":      inputState &= ~0x20; break;
+        case "KeyX":       inputState &= ~0x40; break;
+        case "KeyZ":       inputState &= ~0x80; break;
+      }
+    });
 
-              btn.addEventListener("mousedown", e => {
-                inputState |= dirToBit[dir];
-              });
+    // Touch + Mouse input
+    const dirToBit = {
+      up:    0x08,
+      down:  0x04,
+      left:  0x02,
+      right: 0x01
+    };
 
-              btn.addEventListener("mouseup", e => {
-                inputState &= ~dirToBit[dir];
-              });
+    document.querySelectorAll(".touch-button").forEach(btn => {
+      const dir = btn.dataset.dir;
 
-              btn.addEventListener("mouseleave", e => {
-                inputState &= ~dirToBit[dir];
-              });
-            });
+      btn.addEventListener("touchstart", e => {
+        e.preventDefault();
+        inputState |= dirToBit[dir];
+      }, { passive: false });
 
-            function runFrame() {
-              runUntilDot();
-              drawFramebuffer();
-              requestAnimationFrame(runFrame);
-            }
+      btn.addEventListener("touchend", e => {
+        inputState &= ~dirToBit[dir];
+      });
 
-            function runUntilDot() {
-              while (pc < program.length) {
-                const cmd = program[pc];
-                switch (cmd) {
-                  case ">": pointer++; break;
-                  case "<": pointer--; break;
-                  case "+": memory[pointer]++; break;
-                  case "-": memory[pointer]--; break;
-                  case ".": pc++; return;
-                  case ",": memory[pointer] = inputState; break;
-                  case "[":
-                    if (memory[pointer] === 0) {
-                      let open = 1;
-                      while (open > 0) {
-                        pc++;
-                        if (program[pc] === "[") open++;
-                        else if (program[pc] === "]") open--;
-                      }
-                    }
-                    break;
-                  case "]":
-                    if (memory[pointer] !== 0) {
-                      let close = 1;
-                      while (close > 0) {
-                        pc--;
-                        if (program[pc] === "]") close++;
-                        else if (program[pc] === "[") close--;
-                      }
-                      pc--;
-                    }
-                    break;
-                }
+      btn.addEventListener("mousedown", e => {
+        inputState |= dirToBit[dir];
+      });
+
+      btn.addEventListener("mouseup", e => {
+        inputState &= ~dirToBit[dir];
+      });
+
+      btn.addEventListener("mouseleave", e => {
+        inputState &= ~dirToBit[dir];
+      });
+    });
+
+    function runFrame() {
+      runUntilDot();
+      drawFramebuffer();
+      requestAnimationFrame(runFrame);
+    }
+
+    function runUntilDot() {
+      while (pc < program.length) {
+        const cmd = program[pc];
+        switch (cmd) {
+          case ">": pointer++; break;
+          case "<": pointer--; break;
+          case "+": memory[pointer]++; break;
+          case "-": memory[pointer]--; break;
+          case ".": pc++; return;
+          case ",": memory[pointer] = inputState; break;
+          case "[":
+            if (memory[pointer] === 0) {
+              let open = 1;
+              while (open > 0) {
                 pc++;
+                if (program[pc] === "[") open++;
+                else if (program[pc] === "]") open--;
               }
             }
-
-            function drawFramebuffer() {
-              for (let i = 0; i < fbSize; i++) {
-                const val = memory[i];
-                const x = i % 16;
-                const y = Math.floor(i / 16);
-                const r = ((val & 0xE0) >> 5) * 255 / 7;
-                const g = ((val & 0x1C) >> 2) * 255 / 7;
-                const b = (val & 0x03) * 255 / 3;
-                ctx.fillStyle = `rgb(${r},${g},${b})`;
-                ctx.fillRect(x * scale, y * scale, scale, scale);
+            break;
+          case "]":
+            if (memory[pointer] !== 0) {
+              let close = 1;
+              while (close > 0) {
+                pc--;
+                if (program[pc] === "]") close++;
+                else if (program[pc] === "[") close--;
               }
+              pc--;
             }
-        </script>
+            break;
+        }
+        pc++;
+      }
+    }
 
-        <!--- <div id="dosbox"></div>
-        <script>
-            Dos(document.getElementById('dosbox'), {
-                wdosboxUrl: 'https://js-dos.com/6.22/current/wdosbox.js',
-            }).ready(async (fs, main) => {
-                try {
-                    const response = await fetch('https://superkitty1549.github.io/superkitty1549/src/snake.zip');
-                    if (!response.ok) throw new Error(`Fetch failed: ${response.status}`);
-                    const arrayBuffer = await response.arrayBuffer();
-                    await fs.extract(new Uint8Array(arrayBuffer));
-                    main(['-c', 'snake.exe']);
-                } catch (e) {
-                    alert(`Failed to start game: ${e.message}`)
-                    console.error(e)
-                }
-            })
-        </script> -->
-    </body>
+    function drawFramebuffer() {
+      for (let i = 0; i < fbSize; i++) {
+        const val = memory[i];
+        const x = i % 16;
+        const y = Math.floor(i / 16);
+        const r = ((val & 0xE0) >> 5) * 255 / 7;
+        const g = ((val & 0x1C) >> 2) * 255 / 7;
+        const b = (val & 0x03) * 255 / 3;
+        ctx.fillStyle = `rgb(${r},${g},${b})`;
+        ctx.fillRect(x * scale, y * scale, scale, scale);
+      }
+    }
+</script>
+</body>
 </html>
