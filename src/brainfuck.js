@@ -1,41 +1,32 @@
-// Basic Brainfuck interpreter (no debug, just works)
-window.runBrainfuck = function(code, { input, output }) {
+// please work please work please work
+function runBF(code, input = "", write = (c) => console.log(c)) {
   const tape = new Uint8Array(30000);
-  let ptr = 0;
-  let pc = 0;
+  let ptr = 0, ip = 0, inputPtr = 0;
   const loopStack = [];
-  const jumpTable = {};
+  const jumps = {};
 
-  // Precompute jump table for [ and ]
-  const stack = [];
+  // Precompute matching brackets
+  const openStack = [];
   for (let i = 0; i < code.length; i++) {
-    if (code[i] === '[') stack.push(i);
-    if (code[i] === ']') {
-      const start = stack.pop();
-      jumpTable[start] = i;
-      jumpTable[i] = start;
+    if (code[i] === '[') openStack.push(i);
+    else if (code[i] === ']') {
+      const start = openStack.pop();
+      jumps[start] = i;
+      jumps[i] = start;
     }
   }
 
-  while (pc < code.length) {
-    switch (code[pc]) {
+  while (ip < code.length) {
+    switch (code[ip]) {
       case '>': ptr++; break;
       case '<': ptr--; break;
       case '+': tape[ptr]++; break;
       case '-': tape[ptr]--; break;
-      case '.': output(tape[ptr]); break;
-      case ',': tape[ptr] = input(); break;
-      case '[':
-        if (tape[ptr] === 0) {
-          pc = jumpTable[pc];
-        }
-        break;
-      case ']':
-        if (tape[ptr] !== 0) {
-          pc = jumpTable[pc];
-        }
-        break;
+      case '.': write(String.fromCharCode(tape[ptr])); break;
+      case ',': tape[ptr] = inputPtr < input.length ? input.charCodeAt(inputPtr++) : 0; break;
+      case '[': if (!tape[ptr]) ip = jumps[ip]; break;
+      case ']': if (tape[ptr]) ip = jumps[ip]; break;
     }
-    pc++;
+    ip++;
   }
-};
+}

@@ -32,28 +32,34 @@
 
         <p id="header">snake</p>
         <p id="intro" style="padding: 0px 25px 0px 25px">
-            here's a snake game made in assembly.
+            here's a snake game made in brainfuck.
         </p>
 
 
-        <pre id="output"></pre>
+        <select id="program">
+            <option value="snake.b">snake.b</option>
+            <option value="badapple.b">badapple.b</option>
+        </select>
+        <button onclick="run()">Run</button>
+        <div id="output"></div>
 
         <script src="brainfuck.js"></script>
         <script>
-            fetch('snake.b')
-              .then(response => response.text())
-              .then(code => {
-                const outputEl = document.getElementById('output');
-                const outputBuffer = [];
+            async function run() {
+              const file = document.getElementById("program").value;
+              const outputDiv = document.getElementById("output");
+              outputDiv.textContent = `Loading ${file}...\n`;
 
-                const runBrainfuck = window.runBrainfuck;
-                runBrainfuck(code, {
-                  output: char => outputBuffer.push(String.fromCharCode(char)),
-                  input: () => 0 // no input support for now
-                });
+              try {
+                const res = await fetch(file);
+                const code = await res.text();
 
-                outputEl.textContent = outputBuffer.join('');
-              });
+                outputDiv.textContent = "";
+                runBF(code, "", c => outputDiv.textContent += c);
+              } catch (err) {
+                outputDiv.textContent += "Error: " + err.message;
+              }
+            }
         </script>
 
         <!--- <div id="dosbox"></div>
