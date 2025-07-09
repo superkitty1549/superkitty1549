@@ -1,5 +1,7 @@
-<a href="https://superkitty1549.github.io/superkitty1549/">
-<p style="display:inline">https://superkitty1549.github.io/superkitty1549/</p>
+<a href="https://superkitty1549.github.io/superkitty1549/" style="display:inline">
+  https://superkitty1549.github.io/superkitty1549/
+</a>
+
 
 <p>
 now what is this trainwreck of a website you may ask
