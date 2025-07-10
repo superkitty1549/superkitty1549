@@ -1,6 +1,6 @@
-import list
-import float
-import int
+import gleam/list
+import gleam/float
+import gleam/int
 
 type Coord = #(Int, Int)
 
