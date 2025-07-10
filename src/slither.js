@@ -1,4 +1,4 @@
-import { get_snake_positions } from './build/dev/javascript/snake/snake.mjs';
+import { get_snake_positions } from '../build/dev/javascript/snake/snake.mjs';
 
 let time = 0;
 let canvas, ctx;
