@@ -5,3 +5,4 @@ target = "javascript" # or "erlang"
 
 [dependencies]
 gleam_stdlib = "~> 0.34"
+
