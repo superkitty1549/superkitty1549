@@ -19,6 +19,8 @@ and originally i made snake in assembly (yep i didnt write code to make it in as
 anyways this is a wip, the snake is going to be an easter egg when im done and not just a thing you can access like other tabs
 
 and yes the working snake you see in the website is coded entirely in brainfuck with the interpreter in snake.html
+
+update so i decided to try and make the slither snake animation in gleam and js i kinda hate myself if it wasnt obvious
 </p>
 
 <!--
